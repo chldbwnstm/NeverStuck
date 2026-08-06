@@ -56,6 +56,34 @@ iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install
 | Claude Code | `~/.claude/skills/neverstuck/` | `/neverstuck "문제"` |
 | Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` 또는 `/skills` |
 
+## 사용 예
+
+```
+/neverstuck "test_order_export가 CI에서만 간헐적으로 실패해. 타임아웃을
+5초 → 10초 → 20초로 올렸는데, 그때마다 며칠 가다가 또 실패해."
+```
+
+돌아오는 것 (요약 — 전체 리포트는 [examples/flaky-ci-test.md](examples/flaky-ci-test.md)):
+
+```
+[발화 확인] 같은 노브(타임아웃) 3회 조정 + "됐다가 다시 깨짐" → 진행.
+
+[인터뷰 — 질문 ≤5개, 한 메시지]
+실패 로그는 TimeoutError야, 다른 에러야? / 로컬과 CI는 뭐가 달라? /
+원시 로그 있어? / 아직 안 본 곳은?
+
+[UNSTUCK REPORT]
+A. 진단 — 튜닝하던 노브가 인과 경로에 없다: 실패는 타임아웃이 아니라
+   행 개수 불일치. 모든 시도가 공유한 미검증 가정 = "실패 = 느려서".
+B. 가설 — H1 같은 샤드의 형제 테스트가 같은 테이블을 씀 (공유 상태)
+          H2 리소스 경합 → 로그(카운트 불일치)가 기각.
+C. 재작성 프롬프트 — 타임아웃 변경 금지. "5→10→20초가 각각 왜 며칠씩은
+   먹혔는지"를 역예측하는 메커니즘 요구.
+D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
+   → test_bulk_import와 10/10 재현. 수정: 테스트별 스키마 격리.
+   타임아웃은 5초로 원복.
+```
+
 ## 왜 이 스킬이 필요한가
 
 ### #1: "값 좀 다시 맞춰줘"는 절대 수렴하지 않는다

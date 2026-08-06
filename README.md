@@ -57,6 +57,37 @@ chat — the protocol is pure text and works the same everywhere.
 | Claude Code | `~/.claude/skills/neverstuck/` | `/neverstuck "problem"` |
 | Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` or `/skills` |
 
+## Usage
+
+```
+/neverstuck "test_order_export fails intermittently, but only in CI. I've raised
+its timeout 5s → 10s → 20s, and each time it holds for a few days and fails again."
+```
+
+What you get back (condensed — full report in
+[examples/flaky-ci-test.md](examples/flaky-ci-test.md)):
+
+```
+[Arming check] Same knob (timeout) tuned 3 times + "worked, then broke" → engage.
+
+[Interview — ≤5 questions, one message]
+Are the failure logs TimeoutError, or something else? / What differs between
+local and CI? / Got raw logs? / What haven't you looked at yet?
+
+[UNSTUCK REPORT]
+A. Diagnosis — the knob being tuned isn't on the causal path: failures are
+   row-count mismatches, not timeouts. Shared unverified assumption =
+   "the failure is slowness."
+B. Hypotheses — H1 a sibling test in the same shard writes the same table
+   (shared state); H2 resource contention → rejected by the logs
+   (count mismatch, not timeout).
+C. Rewritten prompt — timeout changes banned. Demand a mechanism that
+   retro-predicts why 5→10→20s each held for a few days.
+D. One experiment — pin the test into a shard with each sibling, one at a time.
+   → reproduces 10/10 with test_bulk_import. Fix: per-test schema isolation.
+   Timeout reverted to 5s.
+```
+
 ## Why This Skill Exists
 
 ### #1: "Just tweak the value again" never converges

@@ -55,6 +55,35 @@ iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install
 | Claude Code | `~/.claude/skills/neverstuck/` | `/neverstuck "问题"` |
 | Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` 或 `/skills` |
 
+## 使用示例
+
+```
+/neverstuck "test_order_export 只在 CI 里间歇性失败。我把超时从
+5秒 → 10秒 → 20秒 一路加上去，每次都撑几天然后又挂。"
+```
+
+你会得到（摘要 —— 完整报告见
+[examples/flaky-ci-test.md](examples/flaky-ci-test.md)）：
+
+```
+[触发检查] 同一旋钮（超时）调了 3 次 + "好了又坏" → 启动。
+
+[访谈 —— ≤5 个问题，一条消息]
+失败日志是 TimeoutError 还是别的错误？/ 本地和 CI 有什么不同？/
+有原始日志吗？/ 还有什么没查过？
+
+[UNSTUCK REPORT]
+A. 诊断 —— 你在调的旋钮根本不在因果链上：失败是行数不一致，
+   不是超时。所有尝试共享的未验证假设 = "失败 = 太慢"。
+B. 假说 —— H1 同一分片里的兄弟测试写了同一张表（共享状态）；
+   H2 资源争用 → 被日志（行数不一致）否决。
+C. 改写后的提示词 —— 禁止再改超时。要求一个能回溯预测
+   "为什么 5→10→20 秒各撑了几天"的机制。
+D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分片运行。
+   → 与 test_bulk_import 同分片时 10/10 复现。修复：按测试隔离 schema。
+   超时改回 5 秒。
+```
+
 ## 为什么需要这个技能
 
 ### #1："再帮我调一下这个值"永远不会收敛
