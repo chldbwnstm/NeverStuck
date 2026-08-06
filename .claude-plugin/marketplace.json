@@ -1,0 +1,12 @@
+{
+  "name": "neverstuck",
+  "owner": { "name": "chldbwnstm" },
+  "plugins": [
+    {
+      "name": "neverstuck",
+      "source": "./",
+      "description": "Escape repeated-failure loops in any domain - turns symptom-tuning prompts into root-cause diagnosis.",
+      "version": "1.0.0"
+    }
+  ]
+}
