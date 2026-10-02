@@ -25,23 +25,37 @@
 /plugin install neverstuck@neverstuck
 ```
 
+用 `/neverstuck` 调用（也会显示为 `/neverstuck:neverstuck`）。更新：先运行
+`/plugin marketplace update neverstuck`，再在 `/plugin` 里对该插件选 **Update now** ——
+第三方市场默认不自动更新。在 shell 里则是先 `claude plugin marketplace update neverstuck`，
+再 `claude plugin update neverstuck@neverstuck`。
+
 **Codex 及其他智能体**
 
 ```bash
 npx skills@latest add chldbwnstm/NeverStuck
 ```
 
+更新时重新运行同一条命令 —— 仓库在多个文件夹里放了同一个技能，所以 `npx skills update`
+可能会跳过它。
+
 **脚本安装（一次装好 Claude Code + Codex 的用户全局）**
 
 ```bash
 # macOS/Linux
 curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
+# one agent only: ... | bash -s -- claude   (or codex)
 ```
 
 ```powershell
 # Windows
 iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1 | iex
+# one agent only:
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1).Content)) -Target codex
 ```
+
+更新就是重新运行同一行。每个智能体只选一种安装方式 —— 插件、npx、脚本或复制；装两次会留下
+两份彼此漂移的副本。
 
 **给爱折腾的人**
 
@@ -52,14 +66,18 @@ iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install
 
 | 智能体 | 用户全局安装路径 | 调用方式 |
 |---|---|---|
-| Claude Code | `~/.claude/skills/neverstuck/` | `/neverstuck "问题"` |
+| Claude Code | `~/.claude/skills/neverstuck/`（或 `$CLAUDE_CONFIG_DIR/skills/neverstuck/`） | `/neverstuck "问题"` |
 | Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` 或 `/skills` |
+
+完整安装是一个文件夹里同时有 `SKILL.md`、`PROTOCOL.md` 和 `examples/teampoint-laser-pointer.md`；
+上面每种安装方式都会把这三个文件一起装好。手动复制时三个都要带上 —— 只有 `SKILL.md` 的话，它只是一个
+指向 `PROTOCOL.md` 的说明。
 
 ## 使用示例
 
 ```
-/neverstuck "test_order_export 只在 CI 里间歇性失败。我把超时从
-5秒 → 10秒 → 20秒 一路加上去，每次都撑几天然后又挂。"
+/neverstuck "test_order_export 只在 CI 里间歇性失败。我把超时先后
+加到 5秒、10秒、20秒，一共三次，每次都撑几天然后又挂。"
 ```
 
 你会得到（摘要 —— 完整报告见
@@ -76,13 +94,15 @@ iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install
 A. 诊断 —— 你在调的旋钮根本不在因果链上：失败是行数不一致，
    不是超时。所有尝试共享的未验证假设 = "失败 = 太慢"。
 B. 假说 —— H1 同一分片里的兄弟测试写了同一张表（共享状态）；
-   H2 资源争用 → 被日志（行数不一致）否决。
+   H2 资源争用 → 被日志（行数不一致）否决；H3 代码内部的真实竞态 → 被削弱（单独运行从不失败）。
 C. 改写后的提示词 —— 禁止再改超时。要求一个能回溯预测
    "为什么 5→10→20 秒各撑了几天"的机制。
 D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分片运行。
-   → 与 test_bulk_import 同分片时 10/10 复现。修复：按测试隔离 schema。
-   超时改回 5 秒。
+   只与某一个兄弟测试同分片时复现 ⇒ H1；都不复现 ⇒ 重新检视 H3。
 ```
+
+跑完 D 之后：与 `test_bulk_import` 同分片时 10/10 复现 → 按测试隔离 schema 修复，超时改回
+5 秒。
 
 ## 为什么需要这个技能
 
@@ -90,8 +110,9 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 
 真实案例：把第三方 SDK 的归一化坐标映射到像素时，X 轴每个会话偏移 15~60px 且各不相同。
 开发者在 10 多个会话里不断把误差日志喂给智能体，让它把 X_SCALE 从 0.85 → 0.90 → 0.95 地调。
-每个值都在当时的会话里"对了"，下个会话又崩。真正的答案是 **2/3** —— SDK 内部固定的 750×500
-画布经 letterbox 缩放产生的常量。是几何，不是值。
+每个值都在当时的会话里"对了"，下个会话又崩。真正的答案是 **2/3** = 500/750 —— 不是更好的
+猜测值，而是从 SDK 内部固定的 750×500 画布*推导*出的常量，在 0.9 附近怎么调都碰不到。是几何，
+不是值。（[示例](examples/teampoint-laser-pointer.md)用理想化模型重构了这个案例。）
 
 **The Fix.** 同一个旋钮调了 3 次仍失败时，NeverStuck 会**禁用**这个旋钮并提出要求：
 *"先解释为什么'正确的值'每个会话都不一样。你的解释必须能回溯预测过去每次调参为什么都恰好
@@ -99,31 +120,31 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 
 ### #2：解药早就在回答里 —— 只是被扔掉了
 
-实测结果（Opus 5 / Sonnet 5 盲测实验，2026-08）：
+来自一次小规模盲测（Opus 5 / Sonnet 5，2026-08；每组 1 次、合成数据）：
 
 > 两个模型都在首次接触时就自行推导出了 letterbox 假说和"应该测量什么"。但回答里同时也给了
 > "急用的话先拿这个值"的权宜之计 —— 忙碌的人只把数字拿走，把诊断扔掉。10 个会话的死循环
 > 就从那一刻开始。
 >
-> —— NeverStuck 实证实验记录（8 个实验组，Opus 5 / Sonnet 5）
+> —— NeverStuck 实验笔记（8 个实验组，各 1 次，Opus 5 / Sonnet 5）
 
 **The Fix.** NeverStuck 会给回答中的权宜值打上 `[loop-bait]` 标签，并把它绑定到能让它作废的
 那个实验上。它不拦着你拿数字 —— 只保证你是**睁着眼睛**拿的。
 
 ### #3：为什么给再多数据也解不开
 
-同一实验的悖论式发现：
+同一实验的悖论式观察（每组只跑 1 次 —— 是线索，不是定律）：
 
 > Sonnet 5 在原始数据充足的条件下掉进了陷阱（拟合出一个常量后停止思考），却在完全没有数据的
 > 条件下成功逃脱。数字给模型的是"可以解的东西"，而用语言描述的症状形态给它的是"必须解释的
 > 东西"。
 
 **The Fix.** NeverStuck 的访谈强制的不是数据收集，而是**把症状特征用语言说出来**：
-什么坏了、什么*反常地完好*、失败随什么变化、又与什么无关。这四句话能砍掉 90% 的假设空间。
+什么坏了、什么*反常地完好*、失败随什么变化、又与什么无关。这四句话能砍掉大部分假设空间。
 
 ## 技能
 
-**User-invoked**
+**User- or model-invoked**
 
 - **[neverstuck](skills/neverstuck/SKILL.md)** —— 逃出反复失败的死循环。适用于同类修复失败
   3 次以上、"好了又坏"、在没有推导依据的情况下调常量、或对反复失败感到挫败（"还是不行"、
@@ -131,8 +152,8 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 
 **调用后会发生什么**
 
-1. **先抑制误触发** —— 3 次门槛 + 硬信号 S7（"'正确的值'是否随上下文而不同？"）+
-   品味边界守卫。如果其实没卡住，它会直说并退出。
+1. **先抑制误触发** —— 3 次门槛 + 硬信号 S7（"'正确的值'是否随上下文而不同？"——dev/prod 这类
+   有意按环境区分的设置不算）+ 品味边界守卫。如果其实没卡住，它会直说并退出。
 2. **Stuck Packet 访谈**（≤5 个问题，一条消息内）—— 尝试历史 → 症状形态 → 上下文之间的
    差异 → 原始数据 → 还没看过的东西。
 3. **Unstuck Report** —— A 诊断 / B 根因假说 2~3 个（是模型，不是值）/ C 改写后的提示词
@@ -145,7 +166,7 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 - **[PROTOCOL.md](PROTOCOL.md)** —— 技能本体。领域中立、纯自然语言、可粘贴进任何 LLM。
   其余一切都是它的适配器。
 - **[examples/teampoint-laser-pointer.md](examples/teampoint-laser-pointer.md)** —— 起源
-  案例：10+ 会话的死循环 2 轮终结（one-shot 示范用）。
+  案例：真实的 10+ 会话死循环，按协议重构为 2 轮的运行（one-shot 示范用）。
 - **[examples/flaky-ci-test.md](examples/flaky-ci-test.md)** —— 超时调参死循环。旋钮不是
   数字时结构也一样。
 - **[examples/llm-prompt-loop.md](examples/llm-prompt-loop.md)** —— 卡住的东西是提示词本身
@@ -157,11 +178,19 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 
 一致性测试：把 `PROTOCOL.md` + 一个新领域的 Stuck Packet 粘贴给任意主流模型，检查
 ① A/B/C/D 四节齐全 ② 假说是机制而非值 ③ 没有给原旋钮提新值 ④ 恰好一个实验。
-2026-08-06，用一个不在示例中的 ETL 分页案例在 Opus 5 和 Sonnet 5 上 **2/2 通过**
-（排名第一的假说 = 隐藏的真实答案）。若主流模型未通过，应简化协议，而不是特化适配器。
+2026-08-06，用一个不在示例中的 ETL 分页案例在 Opus 5 和 Sonnet 5 上各跑 1 次，**2/2 通过**
+（排名第一的假说 = 隐藏的真实答案）；该 packet 不在仓库里。可重复运行的案例见
+[`conformance/CASES.md`](conformance/CASES.md)，其中包括*不应*产出报告的情况（还没卡住、品味问题）
+和权宜值标签的检查。若主流模型未通过，应简化协议，而不是特化适配器。
 
 ---
 
-规范源是仓库根目录的 `PROTOCOL.md` 与 `adapters/claude-code/SKILL.md`。仓库内的副本
-（`.claude/skills/`、`.agents/skills/`、`skills/`）用 `install.ps1 -Sync` /
-`./install.sh sync` 同步。
+规范源是仓库根目录的 `PROTOCOL.md`、`adapters/claude-code/SKILL.md` 与
+`examples/teampoint-laser-pointer.md`。仓库内的副本（`.claude/skills/`、`.agents/skills/`、
+`skills/`）用 `install.ps1 -Sync` / `./install.sh sync` 同步，不一致时 CI 会失败。技能有改动时，
+请提升 `.claude-plugin/plugin.json` 里的 `version` —— 插件用户只会收到新版本。用户全局安装
+（`~/.claude/skills/`）优先于仓库内副本，所以本地测试 `/neverstuck` 前，请在检出目录里运行
+`./install.sh`（或 `.\install.ps1`）—— 一行命令安装的是 GitHub 上的 `master` —— 或者删除
+`~/.claude/skills/neverstuck` 后运行 `./install.sh sync`（或 `.\install.ps1 -Sync`）。
+
+采用 [MIT](LICENSE) 许可证。

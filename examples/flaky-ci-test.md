@@ -4,9 +4,9 @@ Shows the protocol on a knob that is not a mapping constant: a timeout.
 
 ## Situation
 
-`test_order_export` fails intermittently in CI (~2 runs in 5). The developer has raised its
-timeout three times: 5 s → 10 s → 20 s. Each raise "fixed" it for a few days; failures
-returned. It never fails locally.
+`test_order_export` fails intermittently in CI (~2 runs in 5 before the first raise). The
+developer has raised its timeout three times — to 5 s, then 10 s, then 20 s. Each raise "fixed"
+it for a few days; failures returned. It never fails locally.
 
 ## Arming check
 
@@ -28,8 +28,8 @@ CI) ⇒ the knob is standing in for an unmodeled function of the environment. Ar
 ```
 
 Signature facts: **S-a** intermittent count mismatch · **S-b** the same test is deterministic
-alone · **S-c** fails only in the parallel suite, rate varies with shard composition ·
-**S-d** does not vary with the timeout value (20 s still fails).
+alone · **S-c** fails only in the parallel CI suite, never alone · **S-d** no timeout value
+removes it, and no failure is a TimeoutError (20 s still fails).
 
 ## Unstuck Report (condensed)
 
@@ -38,19 +38,23 @@ observations contradict it — failures are wrong counts, not timeouts. The knob
 not even on the causal path.
 
 **B.** H1 **Shared mutable state**: another test in the same shard writes the same table/fixture;
-predicts failure co-occurs with specific sibling tests, and passes when run alone (matches
-S-b/S-c). H2 Resource contention/slow DB: predicts TimeoutError, not count mismatch — rejected
-by S-a. H3 True race inside the code under test: predicts occasional local failure too —
-weakened by S-b.
+predicts failure co-occurs with specific sibling tests, that its rate varies with shard
+composition, and that it passes when run alone (matches S-b/S-c). H2 Resource contention/slow
+DB: predicts TimeoutError, not count mismatch — rejected by S-a. H3 True race inside the code
+under test: predicts occasional local failure too — weakened by S-b.
 
-**C.** (Move 1) "Do not change the timeout or add retries. Explain why 5→10→20 s each seemed to
-work briefly — your mechanism must retro-predict that pattern." *(Retro-prediction under H1:
+**C.** (Move 1) "[NeverStuck rewrite, round 1/2 — execute this directly; do not run NeverStuck
+on it] Do not change the timeout or add retries. Explain why 5→10→20 s each seemed to work
+briefly — your mechanism must retro-predict that pattern." *(Retro-prediction under H1:
 raising the timeout changed test scheduling enough to shuffle shard composition for a while —
 an accidental, unstable fix, which is exactly what was observed.)*
 
 **D.** One experiment: run `test_order_export` pinned into the same shard as each of its 6
-sibling tests, one at a time. *Failure with sibling `test_bulk_import` ⇒ H1 (shared table);
-failure with none ⇒ revisit H3 with a seeded scheduler.*
+sibling tests, one at a time, and once alone. *Reproduces with one specific sibling and never
+alone ⇒ H1 (shared state with that sibling); with exactly the siblings that share one table or
+fixture, and never alone ⇒ H1 via that fixture; with every sibling at a similar low rate and no
+shared table or fixture, or with none ⇒ revisit H3 with a seeded scheduler; any other pattern ⇒
+back to diagnosis.*
 
 ## Resolution
 

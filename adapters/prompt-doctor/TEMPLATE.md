@@ -7,7 +7,8 @@ Zero installation. Works in any chat UI with any model.
 1. Paste the **entire contents of `PROTOCOL.md`** into the chat.
 2. Below it, paste this template with the blanks filled (or just your raw failure
    transcript — the model will interview you for the rest).
-3. Send. You should get back a 4-section UNSTUCK REPORT.
+3. Send. You should get back interview questions (answer them) and then a 4-section UNSTUCK
+   REPORT — or a plain "not needed yet" if you are not actually stuck.
 
 ---
 
@@ -37,8 +38,22 @@ RAW TRANSCRIPT (optional — paste the failing conversation/attempts here):
 
 ## Pass criteria (how you know it worked)
 
-The reply must contain sections **A/B/C/D**; section B hypotheses must be mechanisms (models),
-not values; section C must NOT contain a new value for the knob you were tuning; section D must
-be exactly ONE experiment with predicted outcomes per hypothesis. If you instead got another
-tuned value — the model ignored the protocol; re-paste PROTOCOL.md and try once more, or switch
-models.
+Judge the reply by which outcome you got:
+
+- **Interview questions** — at most 5, in one message. Answer them; the report comes next.
+- **"NeverStuck is not needed yet" + ordinary advice** — correct on a first failed attempt; on
+  a second one unless the value that worked in one context failed in another, where a different
+  value then worked (values that are intended per-context settings, such as dev vs prod or per
+  machine, don't count); or when you said this is an intentional search. This advice may
+  include a concrete value.
+- **"NeverStuck does not apply here" + ordinary advice** — correct when the goal is a matter of
+  taste (no fact of the matter); an offer to reframe the preference is fine.
+- **The UNSTUCK REPORT** — it must contain sections **A/B/C/D**; section B hypotheses must be
+  mechanisms (models), not values; section C must NOT contain a new tuned or guessed value for
+  the knob you were tuning (asking for a derived closed form is fine); section D must be exactly
+  ONE experiment with predicted outcomes per hypothesis; no stopgap value unless you asked for
+  one — and then outside section C, with the `[loop-bait — …]` tag.
+
+If the report instead handed you another untagged tuned value — the model ignored the
+protocol; re-paste PROTOCOL.md and try once more, or switch models. Re-runnable test cases,
+including the ones that must not produce a report, are in `conformance/CASES.md`.

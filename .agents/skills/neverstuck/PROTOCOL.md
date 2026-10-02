@@ -1,4 +1,4 @@
-# NeverStuck Protocol (v1)
+# NeverStuck Protocol (v1.1)
 
 You — the agent reading this — are executing **NeverStuck**: a rescue protocol for repair loops.
 A repair loop is a situation where repeated attempts at the same goal keep failing because each
@@ -28,34 +28,66 @@ Engage the protocol only if **both** hold:
 
 1. **The 3-attempt gate.** At least 3 attempts of the *same move class* at the same goal have
    failed. Same move class = changes that a single ban would cover (the same knob re-valued,
-   the same sentence re-worded, the same config re-pinned).
+   the same sentence re-worded, the same config re-pinned). An attempt is a change made to
+   reach the goal; the starting state is not one.
 2. **The guard.** This is NOT a declared, converging search over a genuinely empirical quantity
    (an intentional sweep with a plan and stopping rule; A/B testing; taste-driven iteration).
    Auto-detection may only *exempt* ("this looks like deliberate bisection — carry on"); it may
    never condemn. If unsure, ask the user one line — "is this an intentional search, or do you
-   expect a single right answer to exist?" — and believe the answer.
+   expect a single right answer to exist?" — in the same message as the Step 1 interview (it
+   counts toward its 5 questions), and believe the answer.
 
 **Hard-signal exception (S7).** If the same knob's "working" value has *provably differed
-across contexts* (sessions, machines, inputs, days) at least twice, engage immediately, even at
-attempt 2. A constant that is not constant is a logical proof that the current model of the
-system is wrong — no amount of tuning can converge.
+across contexts* (sessions, machines, inputs, days) — a value that worked in one context failed
+in another, where a different value was then observed to work — engage immediately, even at
+attempt 2. S7 lowers the 3-attempt gate to the second attempt (never the first) and overrides
+any auto-detected exemption. Once that floor is met, only these keep it from arming: the user's
+own answer that this is an intentional search or that the differing values are intended
+per-context values (if that answer comes in the interview and fewer than 3 attempts have
+failed, say NeverStuck is not needed yet), the boundary below, or the rewrite marker. A
+constant that is not constant is a logical proof that the current model of the system is wrong
+— no amount of tuning can converge.
+
+What counts as S7 evidence:
+
+- One such pair of contexts is enough; it need not happen twice.
+- Values are compared by meaning, not by spelling: `30`, `30.0` and `"30"` are the same
+  timeout, while a flag set to `True` is not a count of `1`. When it is unclear, you judge
+  (ask the user only if the answer decides arming).
+- A difference counts unless the knob is documented, or confirmed by the user, to vary along
+  that context (dev vs prod timeouts, per-machine scaling, per-region endpoints). Record those
+  as intended per-context values (in VARIABLES if a packet is built). Drift within one such
+  context — prod's own value changing across days — still counts.
+- Attempts made inside a declared search do not count.
 
 **Boundary — the fact-of-the-matter test.** If there is no objective right answer (copy tone,
 visual taste, style preference), do NOT arm. S7-like signatures appear in preference domains,
-but there is no derivable model of taste. At most, offer to reframe the preference as a
-function ("warmer *for whom*, in *what context*?") and stop.
+but there is no derivable model of taste. Say that NeverStuck does not apply here (there is no
+fact of the matter). Ordinary help is fine, but NeverStuck's own contribution is at most an
+offer to reframe the preference as a function ("warmer *for whom*, in *what context*?") — no
+packet, no report.
 
-If the arming check fails: say plainly that NeverStuck is not needed yet, give ordinary
-one-shot advice, and stop. Firing on a first or second failure is a protocol violation.
+**Rewrites are not triggers.** A prompt that begins with the NeverStuck rewrite marker (see
+section C) is this protocol's own output: execute it, do not arm on it. If it fails, the next
+report is the next round of the same budget, not a new problem.
+
+If the arming check fails for any other reason (the boundary above has its own wording, and a
+rewrite is simply executed): say plainly that NeverStuck is not needed yet, give ordinary
+one-shot advice, and stop. Firing on a first failed attempt, or on a second one without S7, is
+a protocol violation.
 
 ---
 
 ## Step 1 — Assemble the Stuck Packet
 
 Six fields. First mine whatever conversation, transcript, or notes are available; then
-interview the user for what is missing — **at most 5 questions, in a single message**.
-"Unknown" is a valid answer and is itself diagnostic (an unknown VARIABLES field usually means
-the discriminating covariate was never observed).
+interview the user for what is missing — **at most 5 questions** (each a single numbered item),
+**in a single message** that also shows the draft packet — and wait for the answers. If nothing
+is missing and the guard is settled, go straight to Step 2. If no one can answer (a
+non-interactive run or a subagent), do not ask: fill each missing field with a one-line
+assumption marked ASSUMED, treat an unsettled guard as "no declared search" (also ASSUMED), and
+continue. "Unknown" is a valid answer and is itself diagnostic (an unknown VARIABLES field
+usually means the discriminating covariate was never observed).
 
 ```
 STUCK PACKET
@@ -109,8 +141,13 @@ B. ROOT-CAUSE HYPOTHESES (2–3, ranked)
 C. REWRITTEN PROMPTS (1–3, ready to paste)
    - Self-contained: embed the relevant observations inline, because the next
      agent may share no context with this conversation.
-   - HARD RULE: a rewrite must not propose, request, or imply a new value for
-     the banned knob. If one does, discard and regenerate it.
+   - Start each rewrite with the marker line
+     "[NeverStuck rewrite, round R/2 — execute this directly; do not run NeverStuck on it]",
+     where R is the report round (see Budget), not a count of rewrites.
+   - HARD RULE: a rewrite must not propose, request, or imply a new tuned or
+     guessed value for the banned knob. If one does, discard and regenerate it.
+     (Asking for a closed form derived from a mechanism, every constant with a
+     stated origin, is the goal — see C1 — not a violation.)
 D. NEXT EXPERIMENT (exactly one)
    - The cheapest single experiment that discriminates between the hypotheses
      in B. State BEFORE running: "outcome X ⇒ H1, outcome Y ⇒ H2, …".
@@ -121,8 +158,11 @@ D. NEXT EXPERIMENT (exactly one)
 
 ## The three rewrite moves
 
-Used to produce section C. Apply ONE primary move per rewrite; escalate in order only when a
-move fails to produce a mechanism.
+Used to produce section C. Start with the move whose *For:* line fits most specifically — Move 2
+when the signature is being ignored or a black-box component's property is being curve-fitted,
+otherwise Move 1 (the honesty clause can send you straight to Move 3). Apply ONE primary move
+per rewrite (carrying the ban and the convergence contract along is expected, not stacking);
+escalate in order only when a move fails to produce a mechanism.
 
 ### Move 1 — Ban + retro-predict
 
@@ -151,7 +191,7 @@ Stop trying to fix {SYMPTOM}. Characterize it first. Treat each signature fact
 as a hard constraint any candidate cause must explain:
   S-a {what is wrong}   S-b {what is conspicuously fine}
   S-c {what it varies with}   S-d {what it does not vary with}
-1. Enumerate {K}+ mechanism CLASSES that could produce S-a. Check each against
+1. Enumerate at least 4 mechanism CLASSES that could produce S-a. Check each against
    S-b/S-c/S-d in a table; reject any class that fails one fact.
 2. Factorize the pipeline from source to symptom into named stages. Write each
    stage's relation with symbolic parameters; mark each KNOWN (cite origin) or
@@ -201,9 +241,10 @@ If any answer — yours included — offers a hedged concrete value for a knob u
 
 > `[loop-bait — this value will drift again; gated on the experiment in D]`
 
-Never delete the stopgap (the user's agency comes first), but never let it pass unlabeled.
-Cherry-picking the number while discarding the diagnosis is the single most common way the
-cure gets thrown away.
+Never delete the stopgap (the user's agency comes first), but never let it pass unlabeled. Do
+not volunteer one yourself; if the user asks for a number anyway, give one number (not a
+procedure), outside section C, tagged, and keep D as the next step. Cherry-picking the number
+while discarding the diagnosis is the single most common way the cure gets thrown away.
 
 ## Honesty clause
 
@@ -215,12 +256,14 @@ a changed action space reproduces the loop.
 ## Budget
 
 At most **2 report rounds** per problem (initial + one revision), each rewrite tried at most
-twice — then mandatory Move 3. One experiment at a time, always.
+twice — then mandatory Move 3. The rewrite marker carries the round ("round R/2"), so a fresh
+session knows where the budget stands. One experiment at a time, always.
 
 ## Never
 
-- Fire on a first or second failure.
-- Propose another value for the banned knob, in any disguise.
+- Fire on a first failed attempt, or on a second one without S7.
+- Propose another tuned or guessed value for the banned knob, in any disguise (a stopgap the
+  user asks for is the only exception, and it carries the loop-bait tag).
 - Stack every move into one rewrite.
 - Accept a fix because it works on the current case (that is what the failed loop produced N times).
 - Imply that better prompting substitutes for a missing measurement or a missing human.

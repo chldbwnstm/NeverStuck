@@ -40,27 +40,36 @@ forcefully the instruction is phrased."* S-d falsifies it directly.
 
 **B.** H1 **Instruction distance**: the instruction is at the top; on long inputs it is
 thousands of tokens away from the generation point — predicts failures concentrate on long
-inputs regardless of wording (matches S-b/S-c/S-d). H2 Missing structural constraint: nothing
-forces the first emitted token to be `{` — predicts prose preambles specifically (matches the
-failure samples). H3 Sampling temperature — predicts uniform failures across lengths, rejected
-by S-c.
+inputs regardless of wording (matches S-b/S-c/S-d), and that moving the instruction next to the
+generation point removes them. H2 **Missing structural constraint**: nothing forces the reply
+to start as JSON, and long document-like inputs pull the opening tokens toward prose ("Here is
+the JSON you…") — also fits S-a..S-d, but predicts the failures survive moving the instruction
+next to the generation point. H3 Sampling temperature — predicts uniform failures across
+lengths, rejected by S-c.
 
-**C.** (Move 1 + 2) "Do not reword the instruction again. Explain why 4 rewrites each passed
+**C.** (Move 1) "[NeverStuck rewrite, round 1/2 — execute this directly; do not run NeverStuck
+on it] Do not reword the instruction again. Explain why 4 rewrites each passed
 the dev set and regressed in production — your mechanism must use the fact that the dev set is
 short and production is long. Then propose fixes that change the *structure* of the request,
 not the phrasing."
 
-**D.** One experiment, 2×2: same instruction wording × {top, bottom} placement × {short, long}
-inputs, 50 samples each. *Failures track placement ⇒ H1; failures vanish with a prefilled `{`
-regardless of placement ⇒ H2; both help ⇒ compose.*
+**D.** One experiment on long inputs only (S-c already settles length): the same wording, with
+the instruction at the top vs adjacent to the generation point, no other change, 50 samples per
+arm. *Adjacent brings long-input failures down to the short-input rate ⇒ H1; leaves them within
+noise of the top arm ⇒ H2; anything in between ⇒ both hold (compose).* (A prefilled `{` would
+remove the preamble under either hypothesis, so it is a candidate fix, not a test.)
 
 ## Resolution
 
-The 2×2 showed placement cut long-input failures by ~70%; adding a prefilled `{` (structural
-constraint) removed the rest. Fix: instruction moved adjacent to the generation point +
-response prefill — **C1** ✓ derived from the attention/structure mechanism, not from wording
-taste; **C2** ✓ retro-predicts why every rewrite "worked" on the short dev set (distance was
-never the tested variable). The wording itself was reverted to the original polite sentence.
+Moving the instruction next to the generation point cut long-input failures by ~70% — well
+below the top arm, still above the short-input rate ⇒ both hold, and the fixes compose (the
+residual preambles are consistent with H2). Fix:
+instruction moved adjacent to the generation point + a structural constraint on the reply's
+first token — a prefilled `{`, or structured outputs (which enforce the JSON shape) on APIs that
+reject assistant prefill, as newer Claude models do (e.g. Opus 4.6 and later, Sonnet 5) —
+**C1** ✓ derived from the attention/structure mechanism, not from wording taste; **C2** ✓
+retro-predicts why every rewrite "worked" on the short dev set (distance was never the tested
+variable). The wording itself was reverted to the original polite sentence.
 
 **Boundary note:** had the goal been "make the JSON *field names prettier*", the guard would
 have stopped the protocol — no fact of the matter, no derivable model, no arming.

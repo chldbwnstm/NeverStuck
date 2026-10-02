@@ -1,0 +1,26 @@
+name: skill-copies-in-sync
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sync-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: install.sh must stay executable
+        run: |
+          if [ ! -x install.sh ]; then
+            echo "install.sh lost its exec bit; restore it with: git update-index --chmod=+x install.sh"
+            exit 1
+          fi
+      - name: Regenerate the in-repo skill copies from the canonical files
+        run: ./install.sh sync
+      - name: Fail if any copy drifted
+        run: |
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "In-repo skill copies are out of sync: run ./install.sh sync (or .\install.ps1 -Sync) and commit."
+            exit 1
+          fi

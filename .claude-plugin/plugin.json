@@ -1,6 +1,8 @@
 {
   "name": "neverstuck",
   "description": "Escape repeated-failure loops in any domain - turns symptom-tuning prompts into root-cause diagnosis (Stuck Packet interview, Unstuck Report, one discriminating experiment).",
-  "version": "1.0.0",
-  "author": { "name": "chldbwnstm" }
+  "version": "1.1.0",
+  "author": { "name": "chldbwnstm" },
+  "repository": "https://github.com/chldbwnstm/NeverStuck",
+  "license": "MIT"
 }

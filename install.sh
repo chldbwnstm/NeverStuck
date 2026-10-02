@@ -1,24 +1,39 @@
 #!/usr/bin/env bash
 # NeverStuck installer (macOS/Linux).
 #   ./install.sh                # install user-global for Claude Code + Codex
-#   ./install.sh claude         # Claude Code only  (~/.claude/skills/neverstuck)
+#   ./install.sh claude         # Claude Code only  (${CLAUDE_CONFIG_DIR:-~/.claude}/skills/neverstuck)
 #   ./install.sh codex          # Codex only        (~/.agents/skills/neverstuck)
 #   ./install.sh sync           # maintainers: refresh in-repo skill copies
 # Remote one-liner (requires git):
 #   curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash -s -- codex
 set -euo pipefail
 
 TARGET="${1:-all}"
+case "$TARGET" in
+  all|claude|codex|sync) ;;
+  *) echo "Unknown target '$TARGET' (expected: all | claude | codex | sync)" >&2; exit 2 ;;
+esac
 REPO_URL="${NEVERSTUCK_REPO:-https://github.com/chldbwnstm/NeverStuck.git}"
+CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || true)"
-REPO_ROOT="$SCRIPT_DIR"
+# Trust the script's own folder only when it runs from a file. Under `curl | bash`
+# BASH_SOURCE is empty, and the current directory must not be mistaken for a checkout.
+REPO_ROOT=""
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+  REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 CLEANUP=""
-if [ -z "$REPO_ROOT" ] || [ ! -f "$REPO_ROOT/PROTOCOL.md" ]; then
+trap '[ -z "$CLEANUP" ] || rm -rf "$CLEANUP"' EXIT
+if [ -z "$REPO_ROOT" ] || [ ! -f "$REPO_ROOT/PROTOCOL.md" ] || [ ! -f "$REPO_ROOT/adapters/claude-code/SKILL.md" ]; then
+  if [ "$TARGET" = "sync" ]; then
+    echo "'sync' refreshes the copies inside a NeverStuck checkout; run ./install.sh sync from the repo." >&2
+    exit 2
+  fi
   # Remote mode: not running from a checkout - clone to temp.
   CLEANUP="$(mktemp -d)"
   echo "Cloning $REPO_URL ..."
-  git clone --depth 1 "$REPO_URL" "$CLEANUP" >/dev/null
+  git clone --quiet --depth 1 "$REPO_URL" "$CLEANUP"
   REPO_ROOT="$CLEANUP"
 fi
 
@@ -32,14 +47,17 @@ install_to() {
 }
 
 if [ "$TARGET" = "sync" ]; then
-  echo "Syncing in-repo skill copies from canonical sources:"
+  echo "Syncing in-repo skill copies from canonical sources (PROTOCOL.md, adapters/claude-code/SKILL.md, examples/teampoint-laser-pointer.md):"
   for rel in .claude/skills/neverstuck .agents/skills/neverstuck skills/neverstuck; do
+    # Rebuild each copy from scratch so a stray extra file shows up as a change.
+    rm -rf "${REPO_ROOT:?}/$rel"
     install_to "$REPO_ROOT/$rel"
   done
+  echo "Reminder: when the skill changes, bump \"version\" in .claude-plugin/plugin.json - plugin users only receive a new version."
 else
   echo "Installing NeverStuck user-global:"
   case "$TARGET" in
-    all|claude) install_to "$HOME/.claude/skills/neverstuck" ;;
+    all|claude) install_to "$CLAUDE_HOME/skills/neverstuck" ;;
   esac
   case "$TARGET" in
     all|codex) install_to "$HOME/.agents/skills/neverstuck" ;;
@@ -48,5 +66,3 @@ else
   echo "Done. Claude Code: /neverstuck   |   Codex: \$neverstuck (or /skills)"
   echo "Restart the agent or start a new session to pick up the skill."
 fi
-
-[ -n "$CLEANUP" ] && rm -rf "$CLEANUP" || true

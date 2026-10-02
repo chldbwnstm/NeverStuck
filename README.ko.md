@@ -25,23 +25,37 @@
 /plugin install neverstuck@neverstuck
 ```
 
+`/neverstuck`으로 호출한다(`/neverstuck:neverstuck`으로도 표시된다). 업데이트:
+`/plugin marketplace update neverstuck` 후 `/plugin`에서 플러그인의 **Update now** —
+서드파티 마켓플레이스는 자동 업데이트가 기본으로 꺼져 있다. 셸에서는
+`claude plugin marketplace update neverstuck` 후 `claude plugin update neverstuck@neverstuck`.
+
 **Codex 및 기타 에이전트**
 
 ```bash
 npx skills@latest add chldbwnstm/NeverStuck
 ```
 
+업데이트할 때도 같은 명령을 다시 실행한다 — 저장소가 같은 스킬을 여러 폴더에 담고 있어서
+`npx skills update`는 이 스킬을 건너뛸 수 있다.
+
 **스크립트로 (Claude Code + Codex 전역 동시 설치)**
 
 ```bash
 # macOS/Linux
 curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
+# one agent only: ... | bash -s -- claude   (or codex)
 ```
 
 ```powershell
 # Windows
 iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1 | iex
+# one agent only:
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1).Content)) -Target codex
 ```
+
+업데이트는 같은 줄을 다시 실행하면 된다. 에이전트마다 설치 방식은 하나만 고를 것 — 플러그인,
+npx, 스크립트, 복사 중 두 가지로 설치하면 서로 어긋나는 사본이 두 개 남는다.
 
 **팅커러용**
 
@@ -53,14 +67,18 @@ iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install
 
 | 에이전트 | 전역 설치 경로 | 호출 |
 |---|---|---|
-| Claude Code | `~/.claude/skills/neverstuck/` | `/neverstuck "문제"` |
+| Claude Code | `~/.claude/skills/neverstuck/` (또는 `$CLAUDE_CONFIG_DIR/skills/neverstuck/`) | `/neverstuck "문제"` |
 | Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` 또는 `/skills` |
+
+완전한 설치는 `SKILL.md`, `PROTOCOL.md`, `examples/teampoint-laser-pointer.md`를 한 폴더에 담은
+것이고, 위의 모든 설치 방식이 세 파일을 함께 배포한다. 손으로 복사한다면 셋 다 가져올 것 —
+`SKILL.md`만으로는 `PROTOCOL.md`를 가리키는 안내문일 뿐이다.
 
 ## 사용 예
 
 ```
 /neverstuck "test_order_export가 CI에서만 간헐적으로 실패해. 타임아웃을
-5초 → 10초 → 20초로 올렸는데, 그때마다 며칠 가다가 또 실패해."
+세 번(5초, 10초, 20초로) 올렸는데, 그때마다 며칠 가다가 또 실패해."
 ```
 
 돌아오는 것 (요약 — 전체 리포트는 [examples/flaky-ci-test.md](examples/flaky-ci-test.md)):
@@ -77,12 +95,15 @@ A. 진단 — 튜닝하던 노브가 인과 경로에 없다: 실패는 타임�
    행 개수 불일치. 모든 시도가 공유한 미검증 가정 = "실패 = 느려서".
 B. 가설 — H1 같은 샤드의 형제 테스트가 같은 테이블을 씀 (공유 상태)
           H2 리소스 경합 → 로그(카운트 불일치)가 기각.
+          H3 코드 내부의 진짜 경쟁 상태 → 약화 (단독 실행에선 안 깨짐).
 C. 재작성 프롬프트 — 타임아웃 변경 금지. "5→10→20초가 각각 왜 며칠씩은
    먹혔는지"를 역예측하는 메커니즘 요구.
 D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
-   → test_bulk_import와 10/10 재현. 수정: 테스트별 스키마 격리.
-   타임아웃은 5초로 원복.
+   특정 형제와만 재현 ⇒ H1 / 어느 것과도 재현 안 됨 ⇒ H3 재검토.
 ```
+
+D를 실행한 뒤: `test_bulk_import`와 10/10 재현 → 테스트별 스키마 격리로 수정, 타임아웃은
+5초로 원복.
 
 ## 왜 이 스킬이 필요한가
 
@@ -90,8 +111,10 @@ D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
 
 실화: 서드파티 SDK의 정규화 좌표를 픽셀로 매핑하는데 X축이 세션마다 15~60px씩 어긋났다.
 개발자는 10세션 넘게 에이전트에게 오차 로그를 주며 X_SCALE을 0.85 → 0.90 → 0.95로
-튜닝시켰다. 매번 그 세션에서는 맞았고, 다음 세션에서 깨졌다. 진짜 답은 SDK 내부의 고정
-750×500 캔버스가 letterbox되며 생기는 상수 **2/3** — 값이 아니라 기하학이었다.
+튜닝시켰다. 매번 그 세션에서는 맞았고, 다음 세션에서 깨졌다. 진짜 답은 **2/3** = 500/750 —
+더 나은 추측값이 아니라 SDK 내부 고정 750×500 캔버스에서 *유도된* 상수였고, 0.9 근처를 아무리
+튜닝해도 닿을 수 없는 값이었다. 값이 아니라 기하학이었다.
+([워크드 예제](examples/teampoint-laser-pointer.md)는 이 사례를 이상화된 모델로 재구성한 것이다.)
 
 **The Fix.** 같은 노브를 3번 조정하고도 실패하면, NeverStuck은 그 노브를 **금지**하고
 이렇게 요구한다: *"왜 '맞는 값'이 세션마다 달라지는지부터 설명해. 네 설명은 과거 튜닝이
@@ -99,20 +122,20 @@ D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
 
 ### #2: 치료제는 이미 답변 안에 있었다 — 버려졌을 뿐
 
-실측 결과 (Opus 5·Sonnet 5 blind 실험, 2026-08):
+소규모 blind 실험에서 (Opus 5·Sonnet 5, 2026-08, arm당 1회·합성 데이터):
 
 > 두 모델 모두 첫 접촉에서 letterbox 가설과 "무엇을 측정해야 하는지"를 스스로 도출했다.
 > 그러나 답변에는 "급하면 이 값" 임시방편도 함께 들어 있었다 — 바쁜 인간은 숫자만 채택하고
 > 진단을 버린다. 그 순간 10세션 루프가 시작된다.
 >
-> — NeverStuck 실증 실험 기록 (8-arm, Opus 5·Sonnet 5)
+> — NeverStuck 실험 노트 (8-arm, 각 1회, Opus 5·Sonnet 5)
 
 **The Fix.** NeverStuck은 답변 속 임시값에 `[loop-bait]` 태그를 붙이고, 그것을 무효화할
 실험에 묶는다. 숫자를 집어가는 것은 막지 않는다 — 다만 **눈 뜨고 집어가게** 만든다.
 
 ### #3: 데이터를 더 줘도 못 푸는 이유
 
-같은 실험의 역설적 발견:
+같은 실험의 역설적 관찰 (arm당 1회라 법칙이 아니라 힌트):
 
 > Sonnet 5는 원시 데이터가 풍부한 조건에서 함정에 빠졌고(피팅해서 상수 하나 내고 사고 정지),
 > 데이터가 전혀 없는 조건에서 탈출했다. 숫자는 "풀 수 있는 것"을 주고, 말로 서술된 증상의
@@ -120,11 +143,11 @@ D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
 
 **The Fix.** NeverStuck의 인터뷰는 데이터 수집이 아니라 **시그니처의 언어화**를 강제한다:
 무엇이 틀리고, 무엇이 *conspicuously 멀쩡하고*, 실패가 무엇과 함께 변하고, 무엇과는 안
-변하는가. 이 네 문장이 가설 공간의 90%를 잘라낸다.
+변하는가. 이 네 문장이 가설 공간의 대부분을 잘라낸다.
 
 ## 스킬
 
-**User-invoked**
+**User- or model-invoked**
 
 - **[neverstuck](skills/neverstuck/SKILL.md)** — 반복-실패 루프 탈출. 같은 수정 부류 3회+
   실패, "됐다가 다시 깨짐", 유도 근거 없는 상수 튜닝, 또는 반복 실패에 대한 좌절("아직도 안
@@ -132,8 +155,8 @@ D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
 
 **호출하면 일어나는 일**
 
-1. **발화 억제 우선** — 3회 게이트 + 하드 시그널 S7("맞는 값이 컨텍스트마다 달랐나?") +
-   취향-경계 가드. stuck이 아니면 그렇게 말하고 빠진다.
+1. **발화 억제 우선** — 3회 게이트 + 하드 시그널 S7("맞는 값이 컨텍스트마다 달랐나?" — dev/prod
+   처럼 의도된 환경별 설정은 제외) + 취향-경계 가드. stuck이 아니면 그렇게 말하고 빠진다.
 2. **Stuck Packet 인터뷰** (질문 ≤5개, 한 메시지) — 시도 이력 → 증상의 형태 → 컨텍스트 간
    차이 → 원시 데이터 → 아직 안 본 것.
 3. **Unstuck Report** — A 진단 / B 근본원인 가설 2~3 (값이 아니라 모델) / C 재작성 프롬프트
@@ -147,7 +170,7 @@ D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
 - **[PROTOCOL.md](PROTOCOL.md)** — 스킬 그 자체. 도메인 중립, 순수 자연어, 어떤 LLM에든
   붙여넣기 가능. 나머지는 전부 이것의 어댑터다.
 - **[examples/teampoint-laser-pointer.md](examples/teampoint-laser-pointer.md)** — 모티브
-  사례: 10+세션 루프 → 2턴 종결 (one-shot 시연용).
+  사례: 실제 10+세션 루프를 프로토콜 2턴 실행으로 재구성 (one-shot 시연용).
 - **[examples/flaky-ci-test.md](examples/flaky-ci-test.md)** — 타임아웃 튜닝 루프. 노브가
   숫자가 아니어도 구조는 같다.
 - **[examples/llm-prompt-loop.md](examples/llm-prompt-loop.md)** — 막힌 것이 프롬프트 자체인
@@ -159,11 +182,21 @@ D. 실험 1개 — 형제 테스트와 하나씩 같은 샤드에 고정 실행.
 
 적합성 테스트: `PROTOCOL.md` + 새 도메인의 Stuck Packet을 임의의 주류 모델에 붙여넣어
 ①A/B/C/D 4섹션 ②가설=메커니즘 ③기존 노브의 새 값 없음 ④실험 정확히 1개 — 를 확인한다.
-2026-08-06, 예제에 없는 ETL 페이지네이션 케이스로 Opus 5·Sonnet 5 **2/2 통과** (1위 가설 =
-숨겨둔 정답). 주류 모델이 실패하면 어댑터를 특화하지 말고 프로토콜을 단순화할 것.
+2026-08-06, 예제에 없는 ETL 페이지네이션 케이스로 Opus 5·Sonnet 5 각 1회 실행 **2/2 통과**
+(1위 가설 = 숨겨둔 정답). 이 패킷은 저장소에 없다. 다시 돌려볼 수 있는 케이스는
+[`conformance/CASES.md`](conformance/CASES.md)에 있다 — 리포트를 *내면 안 되는* 경우(아직 stuck
+아님, 취향)와 임시값 태그 확인 포함. 주류 모델이 실패하면 어댑터를 특화하지 말고 프로토콜을
+단순화할 것.
 
 ---
 
-정본은 루트 `PROTOCOL.md`와 `adapters/claude-code/SKILL.md`. 저장소 내 복사본
-(`.claude/skills/`, `.agents/skills/`, `skills/`)은 `install.ps1 -Sync` /
-`./install.sh sync`로 동기화한다.
+정본은 루트 `PROTOCOL.md`, `adapters/claude-code/SKILL.md`, `examples/teampoint-laser-pointer.md`.
+저장소 내 복사본(`.claude/skills/`, `.agents/skills/`, `skills/`)은 `install.ps1 -Sync` /
+`./install.sh sync`로 동기화하고, 어긋나면 CI가 실패한다. 스킬을 바꾸면
+`.claude-plugin/plugin.json`의 `version`을 올릴 것 — 플러그인 사용자는 새 버전만 받는다.
+전역 설치본(`~/.claude/skills/`)이 저장소 복사본보다 우선하므로, 로컬에서 `/neverstuck`을
+시험하기 전에 체크아웃에서 `./install.sh`(또는 `.\install.ps1`)를 실행하거나 — 원라이너는 GitHub
+`master`를 설치한다 — `~/.claude/skills/neverstuck`을 지우고 `./install.sh sync`(또는
+`.\install.ps1 -Sync`)를 실행한다.
+
+[MIT](LICENSE) 라이선스.
