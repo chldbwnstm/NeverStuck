@@ -16,62 +16,37 @@
 
 不限领域。
 
-## 安装（30 秒上手）
+## 安装 —— 交给智能体
 
-**Claude Code**
+打开一个在你自己电脑上运行的会话 —— Claude Code（终端、IDE，或桌面应用 Code 标签页里的 Local
+会话）或 Codex（CLI、IDE 或应用，在这台电脑上而不是云端工作）—— 然后发送：
 
-```
-/plugin marketplace add chldbwnstm/NeverStuck
-/plugin install neverstuck@neverstuck
-```
-
-用 `/neverstuck` 调用（也会显示为 `/neverstuck:neverstuck`）。更新：先运行
-`/plugin marketplace update neverstuck`，再在 `/plugin` 里对该插件选 **Update now** ——
-第三方市场默认不自动更新。在 shell 里则是先 `claude plugin marketplace update neverstuck`，
-再 `claude plugin update neverstuck@neverstuck`。
-
-**Codex 及其他智能体**
-
-```bash
-npx skills@latest add chldbwnstm/NeverStuck
+```text
+请把 NeverStuck 技能安装到我现在使用的智能体上。下载
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md，
+完整阅读（不要只看摘要），并按它替我完成安装。只为这个智能体安装一次：如果这里已经装过
+NeverStuck，就更新那一份，不要再多装一份。告诉我装到了哪里、怎么调用，以及是否需要重启。
 ```
 
-更新时重新运行同一条命令 —— 仓库在多个文件夹里放了同一个技能，所以 `npx skills update`
-可能会跳过它。
+智能体会把三个文件复制到技能文件夹并做检查。应用请求安装许可时请允许。如果 NeverStuck 没有马上
+出现，就开启新会话。
 
-**脚本安装（一次装好 Claude Code + Codex 的用户全局）**
-
-```bash
-# macOS/Linux
-curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
-# one agent only: ... | bash -s -- claude   (or codex)
-```
-
-```powershell
-# Windows
-iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1 | iex
-# one agent only:
-& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1).Content)) -Target codex
-```
-
-更新就是重新运行同一行。每个智能体只选一种安装方式 —— 插件、npx、脚本或复制；装两次会留下
-两份彼此漂移的副本。
-
-**给爱折腾的人**
-
-克隆即用 —— 在本仓库内，Claude Code（`.claude/skills/`）和 Codex（`.agents/skills/`）会
-自动识别技能。想放进自己的项目，把这两个文件夹复制过去并提交，所有协作者自动获得。完全没有
-智能体？把 [`PROTOCOL.md`](PROTOCOL.md) + [`TEMPLATE.md`](adapters/prompt-doctor/TEMPLATE.md)
-粘贴进任何聊天窗口即可 —— 协议是纯文本，在哪里都一样。
-
-| 智能体 | 用户全局安装路径 | 调用方式 |
+| 智能体 | 安装位置 | 调用方式 |
 |---|---|---|
 | Claude Code | `~/.claude/skills/neverstuck/`（或 `$CLAUDE_CONFIG_DIR/skills/neverstuck/`） | `/neverstuck "问题"` |
-| Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` 或 `/skills` |
+| Codex | `~/.agents/skills/neverstuck/` | `$neverstuck` 或 `/skills` |
 
-完整安装是一个文件夹里同时有 `SKILL.md`、`PROTOCOL.md` 和 `examples/teampoint-laser-pointer.md`；
-上面每种安装方式都会把这三个文件一起装好。手动复制时三个都要带上 —— 只有 `SKILL.md` 的话，它只是一个
-指向 `PROTOCOL.md` 的说明。
+**更新：** 再发一次同样的消息。**卸载：** 改为发送：
+
+```text
+请把 NeverStuck 从我现在使用的智能体上移除。下载
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md，
+完整阅读（不要只看摘要），并按其中 "Updating and uninstalling" 一节操作。
+```
+
+只想装在一个项目里，或者两个智能体都装？把安装消息改成那样再发。完整安装是一个包含 `SKILL.md`、
+`PROTOCOL.md` 和 `examples/teampoint-laser-pointer.md` 三个文件的文件夹；智能体遵循的步骤见
+[INSTALL.md](INSTALL.md)。
 
 ## 使用示例
 
@@ -165,6 +140,8 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 
 - **[PROTOCOL.md](PROTOCOL.md)** —— 技能本体。领域中立、纯自然语言、可粘贴进任何 LLM。
   其余一切都是它的适配器。
+- **[INSTALL.md](INSTALL.md)** —— 智能体安装 NeverStuck 时遵循的步骤：三个文件、安装位置和
+  检查方法。
 - **[examples/teampoint-laser-pointer.md](examples/teampoint-laser-pointer.md)** —— 起源
   案例：真实的 10+ 会话死循环，按协议重构为 2 轮的运行（one-shot 示范用）。
 - **[examples/flaky-ci-test.md](examples/flaky-ci-test.md)** —— 超时调参死循环。旋钮不是
@@ -189,8 +166,7 @@ D. 一个实验 —— 把该测试与每个兄弟测试逐一固定进同一分
 `examples/teampoint-laser-pointer.md`。仓库内的副本（`.claude/skills/`、`.agents/skills/`、
 `skills/`）用 `install.ps1 -Sync` / `./install.sh sync` 同步，不一致时 CI 会失败。技能有改动时，
 请提升 `.claude-plugin/plugin.json` 里的 `version` —— 插件用户只会收到新版本。用户全局安装
-（`~/.claude/skills/`）优先于仓库内副本，所以本地测试 `/neverstuck` 前，请在检出目录里运行
-`./install.sh`（或 `.\install.ps1`）—— 一行命令安装的是 GitHub 上的 `master` —— 或者删除
-`~/.claude/skills/neverstuck` 后运行 `./install.sh sync`（或 `.\install.ps1 -Sync`）。
+（`~/.claude/skills/`）优先于仓库内副本，所以要测试本地改动，请让智能体从你的检出目录重新安装
+NeverStuck（INSTALL.md 第 3 步），或在检出目录里运行 `./install.sh claude`（或 `.\install.ps1 -Target claude`）。
 
 采用 [MIT](LICENSE) 许可证。
