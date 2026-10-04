@@ -39,23 +39,27 @@ Install user-wide unless the user asks for one project.
    Cowork or claude.ai Chat, which load skills from the account rather than from these folders.
 2. **Find existing installs for this agent** before writing anything:
    - Claude Code: the user-wide folder from the table; `.claude/skills/neverstuck/` in the
-     current project; and the plugin, counted only if it is enabled here — `claude plugin list`
-     shows `neverstuck@neverstuck` enabled, or, without the CLI,
-     `<config>/plugins/installed_plugins.json` has a `neverstuck@neverstuck` entry with
-     `"scope": "user"` (and `enabledPlugins` in `<config>/settings.json` does not set it to
-     `false`) or a `projectPath` equal to the current project or the working folder — on Windows,
-     compare ignoring case and slash direction (`<config>` is `$CLAUDE_CONFIG_DIR`, else
-     `~/.claude`). A disabled plugin, or an entry for another project, is not an install here:
-     mention it. For another project, add that a user-wide install will also load there, so that
-     project would have NeverStuck twice, and offer to remove the plugin there
-     (`claude plugin uninstall neverstuck@neverstuck --scope project`, run from that project) or
-     to install for this project only.
+     current project; and the plugin, counted only if it is enabled here. Check with
+     `claude plugin list --json`, whose entries carry `enabled`, `scope` and `projectPath`.
+     Without the CLI, read `<config>/plugins/installed_plugins.json` (`<config>` is
+     `$CLAUDE_CONFIG_DIR`, else `~/.claude`): an entry counts when its `scope` is `user` or its
+     `projectPath` is the current project or the working folder, and its effective
+     `enabledPlugins` value is `true` — the project's `.claude/settings.local.json` overrides its
+     `.claude/settings.json`, which overrides `<config>/settings.json`. On Windows, compare paths
+     ignoring case and slash direction; in Git Bash, spell the working folder with `pwd -W`, or
+     test with `[ "<projectPath>" -ef "<folder>" ]`. A disabled plugin, or an entry for another
+     project, is not an install here: mention it. For another project, add that a user-wide
+     install will also load there, so that project would have NeverStuck twice, and offer to
+     remove the plugin there (`claude plugin uninstall neverstuck@neverstuck --scope <that
+     entry's scope>`, run from that project) or to install for this project only.
 
      Under WSL, a `claude` that resolves into `/mnt/c` is the Windows CLI: never run it. Use the
      file check, read the version from `installed_plugins.json`, and ask the user to run plugin
      commands in a WSL terminal where `command -v claude` is not under `/mnt/c`, or in their WSL
-     Claude Code session with `/plugin` (`/plugin marketplace update neverstuck`, then **Update
-     now** under `/plugin manage`) — not with `!claude`.
+     Claude Code session with `/plugin` — not with `!claude`. To update:
+     `/plugin marketplace update neverstuck`, then **Update now** under `/plugin manage`. To
+     uninstall: `/plugin uninstall neverstuck@neverstuck`, then
+     `/plugin marketplace remove neverstuck`.
    - Codex: `~/.agents/skills/neverstuck/`; the older `$CODEX_HOME/skills/neverstuck/`
      (`~/.codex/skills/neverstuck/` when `CODEX_HOME` is unset); and `.agents/skills/neverstuck/`
      or `.codex/skills/neverstuck/` in the current project.
@@ -149,10 +153,11 @@ Old `npx skills` installs link `~/.claude/skills/neverstuck` and `~/.codex/skill
 Updating is the same request: step 2 finds the install, and steps 3–6 — for the plugin, the two
 plugin commands — refresh it.
 
-To uninstall, follow step 1 (local sessions only), run step 2's search for this agent, and remove
-what the user chooses, asking first if there is more than one install. Remove links before
-folders (see "Links and shared folders"). Before deleting a folder, list anything in it besides
-the three files and ask whether to delete it with the folder or move it out first. A project
+To uninstall, follow step 1 (local sessions only) and run step 2's search for this agent. Before
+removing anything, ask the user which installs to remove if there is more than one, and do the
+shared-folder check under "Links and shared folders"; then remove what the user chose, links
+before folders. Before deleting a folder, list anything in it besides the three files and ask
+whether to delete it with the folder or move it out first. A project
 copy tracked by git is shared with collaborators: tell the user, delete it only if they agree,
 and leave the commit to them. For the plugin, run `claude plugin uninstall neverstuck@neverstuck`
 — adding `--scope <scope>`, from that project, when `claude plugin list` shows project or local
