@@ -16,63 +16,32 @@
 
 도메인은 가리지 않는다.
 
-## 설치 (30초 세팅)
+## 설치 — 에이전트에게 맡기기
 
-**Claude Code**
+내 컴퓨터에서 실행되는 세션을 연다 — Claude Code(터미널, IDE, 또는 데스크톱 앱 Code 탭의 Local
+세션) 또는 Codex(CLI, IDE, 앱 — 클라우드가 아니라 이 컴퓨터에서 작업). 그리고 이렇게 보낸다:
 
-```
-/plugin marketplace add chldbwnstm/NeverStuck
-/plugin install neverstuck@neverstuck
-```
-
-`/neverstuck`으로 호출한다(`/neverstuck:neverstuck`으로도 표시된다). 업데이트:
-`/plugin marketplace update neverstuck` 후 `/plugin`에서 플러그인의 **Update now** —
-서드파티 마켓플레이스는 자동 업데이트가 기본으로 꺼져 있다. 셸에서는
-`claude plugin marketplace update neverstuck` 후 `claude plugin update neverstuck@neverstuck`.
-
-**Codex 및 기타 에이전트**
-
-```bash
-npx skills@latest add chldbwnstm/NeverStuck
+```text
+지금 쓰고 있는 에이전트에 NeverStuck 스킬을 설치해줘.
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md 를
+내려받아 요약이 아닌 전체를 읽고, 그대로 따라 설치를 대신 해줘. 이 에이전트에만 한 번
+설치하고, 이미 설치돼 있으면 사본을 하나 더 만들지 말고 그 설치를 업데이트해줘. 어디에
+설치했는지, 어떻게 호출하는지, 재시작이 필요한지 알려줘.
 ```
 
-업데이트할 때도 같은 명령을 다시 실행한다 — 저장소가 같은 스킬을 여러 폴더에 담고 있어서
-`npx skills update`는 이 스킬을 건너뛸 수 있다.
+에이전트가 파일 세 개를 스킬 폴더에 복사하고 확인한다. 앱이 설치 허락을 물으면 허락한다.
+NeverStuck이 바로 보이지 않으면 새 세션을 시작한다.
 
-**스크립트로 (Claude Code + Codex 전역 동시 설치)**
-
-```bash
-# macOS/Linux
-curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
-# one agent only: ... | bash -s -- claude   (or codex)
-```
-
-```powershell
-# Windows
-iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1 | iex
-# one agent only:
-& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1).Content)) -Target codex
-```
-
-업데이트는 같은 줄을 다시 실행하면 된다. 에이전트마다 설치 방식은 하나만 고를 것 — 플러그인,
-npx, 스크립트, 복사 중 두 가지로 설치하면 서로 어긋나는 사본이 두 개 남는다.
-
-**팅커러용**
-
-클론하면 끝 — 저장소 안에서는 Claude Code(`.claude/skills/`)와 Codex(`.agents/skills/`)가
-스킬을 자동 인식한다. 자기 프로젝트에 넣으려면 두 폴더를 복사해 커밋하면 협업자 전원
-자동 적용. 에이전트가 아예 없으면 [`PROTOCOL.md`](PROTOCOL.md) +
-[`TEMPLATE.md`](adapters/prompt-doctor/TEMPLATE.md)를 아무 챗에나 복붙해도 된다 — 프로토콜은
-순수 텍스트라 어디서든 같다.
-
-| 에이전트 | 전역 설치 경로 | 호출 |
+| 에이전트 | 설치 위치 | 호출 |
 |---|---|---|
 | Claude Code | `~/.claude/skills/neverstuck/` (또는 `$CLAUDE_CONFIG_DIR/skills/neverstuck/`) | `/neverstuck "문제"` |
-| Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` 또는 `/skills` |
+| Codex | `~/.agents/skills/neverstuck/` | `$neverstuck` 또는 `/skills` |
 
-완전한 설치는 `SKILL.md`, `PROTOCOL.md`, `examples/teampoint-laser-pointer.md`를 한 폴더에 담은
-것이고, 위의 모든 설치 방식이 세 파일을 함께 배포한다. 손으로 복사한다면 셋 다 가져올 것 —
-`SKILL.md`만으로는 `PROTOCOL.md`를 가리키는 안내문일 뿐이다.
+**업데이트:** 같은 메시지를 다시 보낸다. **삭제:** "이 에이전트에서 NeverStuck
+(https://github.com/chldbwnstm/NeverStuck)을 INSTALL.md에 적힌 대로 제거해줘."라고 보낸다. 한
+프로젝트에만, 또는 두 에이전트 모두에 설치하고 싶으면 메시지를 그렇게 고쳐서 보낸다. 완전한 설치는
+`SKILL.md`, `PROTOCOL.md`, `examples/teampoint-laser-pointer.md` 세 파일이 든 폴더 하나이고,
+에이전트가 따르는 절차는 [INSTALL.md](INSTALL.md)에 있다.
 
 ## 사용 예
 
@@ -169,6 +138,8 @@ D를 실행한 뒤: `test_bulk_import`와 10/10 재현 → 테스트별 스키�
 
 - **[PROTOCOL.md](PROTOCOL.md)** — 스킬 그 자체. 도메인 중립, 순수 자연어, 어떤 LLM에든
   붙여넣기 가능. 나머지는 전부 이것의 어댑터다.
+- **[INSTALL.md](INSTALL.md)** — 에이전트가 NeverStuck을 설치할 때 따르는 절차: 세 파일,
+  설치 위치, 확인 방법.
 - **[examples/teampoint-laser-pointer.md](examples/teampoint-laser-pointer.md)** — 모티브
   사례: 실제 10+세션 루프를 프로토콜 2턴 실행으로 재구성 (one-shot 시연용).
 - **[examples/flaky-ci-test.md](examples/flaky-ci-test.md)** — 타임아웃 튜닝 루프. 노브가
@@ -194,9 +165,8 @@ D를 실행한 뒤: `test_bulk_import`와 10/10 재현 → 테스트별 스키�
 저장소 내 복사본(`.claude/skills/`, `.agents/skills/`, `skills/`)은 `install.ps1 -Sync` /
 `./install.sh sync`로 동기화하고, 어긋나면 CI가 실패한다. 스킬을 바꾸면
 `.claude-plugin/plugin.json`의 `version`을 올릴 것 — 플러그인 사용자는 새 버전만 받는다.
-전역 설치본(`~/.claude/skills/`)이 저장소 복사본보다 우선하므로, 로컬에서 `/neverstuck`을
-시험하기 전에 체크아웃에서 `./install.sh`(또는 `.\install.ps1`)를 실행하거나 — 원라이너는 GitHub
-`master`를 설치한다 — `~/.claude/skills/neverstuck`을 지우고 `./install.sh sync`(또는
-`.\install.ps1 -Sync`)를 실행한다.
+전역 설치본(`~/.claude/skills/`)이 저장소 복사본보다 우선하므로, 로컬 변경을 시험하려면
+에이전트에게 체크아웃에서 NeverStuck을 다시 설치해 달라고 하거나(INSTALL.md 3단계), 체크아웃에서
+`./install.sh claude`(또는 `.\install.ps1 -Target claude`)를 실행한다.
 
 [MIT](LICENSE) 라이선스.

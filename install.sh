@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# NeverStuck installer (macOS/Linux).
-#   ./install.sh                # install user-global for Claude Code + Codex
+# NeverStuck installer (macOS/Linux). Users install NeverStuck by asking their agent, which
+# follows INSTALL.md; the agent may run this script from a clone to do the copy.
 #   ./install.sh claude         # Claude Code only  (${CLAUDE_CONFIG_DIR:-~/.claude}/skills/neverstuck)
 #   ./install.sh codex          # Codex only        (~/.agents/skills/neverstuck)
+#   ./install.sh                # both agents (Claude Code + Codex)
 #   ./install.sh sync           # maintainers: refresh in-repo skill copies
-# Remote one-liner (requires git):
-#   curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash -s -- codex
 set -euo pipefail
 
 TARGET="${1:-all}"
@@ -64,5 +62,6 @@ else
   esac
   echo ""
   echo "Done. Claude Code: /neverstuck   |   Codex: \$neverstuck (or /skills)"
-  echo "Restart the agent or start a new session to pick up the skill."
+  echo "Claude Code picks it up in this session (run /reload-skills if the skills folder was just"
+  echo "created); Codex detects it automatically. If it does not appear, start a new session."
 fi

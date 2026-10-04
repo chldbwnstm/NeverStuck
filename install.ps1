@@ -1,13 +1,11 @@
 #Requires -Version 5.1
 <#
-NeverStuck installer (Windows).
-  .\install.ps1                # install user-global for Claude Code + Codex
+NeverStuck installer (Windows). Users install NeverStuck by asking their agent, which follows
+INSTALL.md; the agent may run this script from a clone to do the copy.
   .\install.ps1 -Target claude # Claude Code only  ($env:CLAUDE_CONFIG_DIR or ~/.claude, then \skills\neverstuck)
   .\install.ps1 -Target codex  # Codex only        (~/.agents/skills/neverstuck)
+  .\install.ps1                # both agents (Claude Code + Codex)
   .\install.ps1 -Sync          # maintainers: refresh in-repo skill copies from canonical sources
-Remote one-liners (require git):
-  iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1 | iex
-  & ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1).Content)) -Target codex
 #>
 param(
   [ValidateSet('all', 'claude', 'codex')] [string]$Target = 'all',
@@ -72,7 +70,8 @@ param(
       if ($Target -eq 'all' -or $Target -eq 'codex') { Install-NeverStuck (Join-Path $HOME '.agents\skills\neverstuck') }
       Write-Host ""
       Write-Host "Done. Claude Code: /neverstuck   |   Codex: `$neverstuck (or /skills)"
-      Write-Host "Restart the agent or start a new session to pick up the skill."
+      Write-Host "Claude Code picks it up in this session (run /reload-skills if the skills folder was just"
+      Write-Host "created); Codex detects it automatically. If it does not appear, start a new session."
     }
   }
   finally {

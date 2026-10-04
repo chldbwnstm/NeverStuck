@@ -17,63 +17,33 @@ symptom**. NeverStuck detects the stuck state and turns your next prompt into a 
 
 It is domain-agnostic.
 
-## Installation (30-second setup)
+## Installation — let your agent do it
 
-**Claude Code**
+Start a session that runs on your own computer — Claude Code (terminal, IDE, or a Local session
+in the desktop app's Code tab) or Codex (CLI, IDE or app, working on this computer rather than
+in the cloud) — and send:
 
-```
-/plugin marketplace add chldbwnstm/NeverStuck
-/plugin install neverstuck@neverstuck
-```
-
-Invoke it with `/neverstuck` (it is also listed as `/neverstuck:neverstuck`). To update:
-`/plugin marketplace update neverstuck`, then **Update now** on the plugin in `/plugin`
-(auto-update is off by default for third-party marketplaces). From a shell:
-`claude plugin marketplace update neverstuck`, then `claude plugin update neverstuck@neverstuck`.
-
-**Codex, and other agents**
-
-```bash
-npx skills@latest add chldbwnstm/NeverStuck
+```text
+Install the NeverStuck skill for the agent I am using right now. Download
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md,
+read the whole file (not a summary) and follow it to do the setup for me. Install it once for
+this agent only: if NeverStuck is already installed here, update that install instead of adding
+a second copy. Tell me where it went, how to invoke it, and whether I need to restart.
 ```
 
-To update, run the same command again — `npx skills update` may skip this skill, because the
-repo ships it in several folders.
+The agent copies three files into your skills folder and checks them. Allow the installation
+when your app asks. If NeverStuck does not show up right away, start a new session.
 
-**Via script (installs user-global for Claude Code + Codex at once)**
-
-```bash
-# macOS/Linux
-curl -fsSL https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.sh | bash
-# one agent only: ... | bash -s -- claude   (or codex)
-```
-
-```powershell
-# Windows
-iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1 | iex
-# one agent only:
-& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/install.ps1).Content)) -Target codex
-```
-
-Re-run the same line to update. Pick one channel per agent — plugin, npx, script, or copy:
-installing twice leaves two copies that drift apart.
-
-**For tinkerers**
-
-Just clone — inside this repo, Claude Code (`.claude/skills/`) and Codex (`.agents/skills/`)
-pick the skill up automatically. To bring it into your own project, copy those two folders and
-commit; every collaborator gets it for free. No agent at all? Paste
-[`PROTOCOL.md`](PROTOCOL.md) + [`TEMPLATE.md`](adapters/prompt-doctor/TEMPLATE.md) into any
-chat — the protocol is pure text and works the same everywhere.
-
-| Agent | User-global install path | Invocation |
+| Agent | Where it lands | Invoke |
 |---|---|---|
 | Claude Code | `~/.claude/skills/neverstuck/` (or `$CLAUDE_CONFIG_DIR/skills/neverstuck/`) | `/neverstuck "problem"` |
-| Codex (CLI/IDE) | `~/.agents/skills/neverstuck/` | `$neverstuck` or `/skills` |
+| Codex | `~/.agents/skills/neverstuck/` | `$neverstuck` or `/skills` |
 
-A complete install is one folder holding `SKILL.md`, `PROTOCOL.md` and
-`examples/teampoint-laser-pointer.md`; every channel above ships all three. If you copy files
-by hand, bring all three — `SKILL.md` alone is only a pointer to `PROTOCOL.md`.
+**Update:** send the same message again. **Remove:** send "Uninstall NeverStuck
+(https://github.com/chldbwnstm/NeverStuck) from this agent as its INSTALL.md describes." Want it
+in one project only, or for both agents? Edit the message to say so. A complete install is one
+folder with three files — `SKILL.md`, `PROTOCOL.md` and `examples/teampoint-laser-pointer.md`;
+[INSTALL.md](INSTALL.md) is what the agent follows.
 
 ## Usage
 
@@ -181,6 +151,8 @@ what it does not vary with. Those four sentences rule out most of the hypothesis
 
 - **[PROTOCOL.md](PROTOCOL.md)** — the skill itself. Domain-neutral, pure natural language,
   pasteable into any LLM. Everything else is an adapter around it.
+- **[INSTALL.md](INSTALL.md)** — what your agent does when it installs NeverStuck: the three
+  files, where they go, and the checks.
 - **[examples/teampoint-laser-pointer.md](examples/teampoint-laser-pointer.md)** — the
   motivating case: a real 10+-session loop, reconstructed as a 2-turn protocol run (the
   one-shot exemplar).
@@ -209,8 +181,7 @@ The canonical sources are `PROTOCOL.md` at the repo root, `adapters/claude-code/
 `skills/`) are synced with `install.ps1 -Sync` / `./install.sh sync`, and CI fails if they
 drift. When the skill changes, bump `version` in `.claude-plugin/plugin.json` — plugin users
 only receive a new version. A user-global install (`~/.claude/skills/`) shadows the in-repo
-copy, so before testing `/neverstuck` locally, run `./install.sh` (or `.\install.ps1`) from your
-checkout — the one-liners install GitHub `master` — or remove `~/.claude/skills/neverstuck` and
-run `./install.sh sync` (or `.\install.ps1 -Sync`).
+copy, so to test local changes, ask your agent to reinstall NeverStuck from your checkout
+(INSTALL.md, step 3), or run `./install.sh claude` (or `.\install.ps1 -Target claude`) from it.
 
 Licensed under [MIT](LICENSE).
