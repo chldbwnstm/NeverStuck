@@ -69,9 +69,10 @@ param(
       if ($Target -eq 'all' -or $Target -eq 'claude') { Install-NeverStuck (Join-Path $claudeHome 'skills\neverstuck') }
       if ($Target -eq 'all' -or $Target -eq 'codex') { Install-NeverStuck (Join-Path $HOME '.agents\skills\neverstuck') }
       Write-Host ""
-      Write-Host "Done. Claude Code: /neverstuck   |   Codex: `$neverstuck (or /skills)"
-      Write-Host "Claude Code picks it up in this session (run /reload-skills if the skills folder was just"
-      Write-Host "created); Codex detects it automatically. If it does not appear, start a new session."
+      Write-Host "Done."
+      if ($Target -eq 'all' -or $Target -eq 'claude') { Write-Host "Claude Code: invoke with /neverstuck; it is picked up in this session (run /reload-skills if the skills folder was just created)." }
+      if ($Target -eq 'all' -or $Target -eq 'codex') { Write-Host "Codex: invoke with `$neverstuck or pick it in /skills; Codex detects it automatically." }
+      Write-Host "If it does not appear, start a new session or restart the app."
     }
   }
   finally {

@@ -37,11 +37,17 @@ NeverStuck이 바로 보이지 않으면 새 세션을 시작한다.
 | Claude Code | `~/.claude/skills/neverstuck/` (또는 `$CLAUDE_CONFIG_DIR/skills/neverstuck/`) | `/neverstuck "문제"` |
 | Codex | `~/.agents/skills/neverstuck/` | `$neverstuck` 또는 `/skills` |
 
-**업데이트:** 같은 메시지를 다시 보낸다. **삭제:** "이 에이전트에서 NeverStuck
-(https://github.com/chldbwnstm/NeverStuck)을 INSTALL.md에 적힌 대로 제거해줘."라고 보낸다. 한
-프로젝트에만, 또는 두 에이전트 모두에 설치하고 싶으면 메시지를 그렇게 고쳐서 보낸다. 완전한 설치는
-`SKILL.md`, `PROTOCOL.md`, `examples/teampoint-laser-pointer.md` 세 파일이 든 폴더 하나이고,
-에이전트가 따르는 절차는 [INSTALL.md](INSTALL.md)에 있다.
+**업데이트:** 같은 메시지를 다시 보낸다. **삭제:** 대신 이렇게 보낸다:
+
+```text
+지금 쓰고 있는 에이전트에서 NeverStuck을 제거해줘.
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md 를
+내려받아 요약이 아닌 전체를 읽고, "Updating and uninstalling" 절을 따라줘.
+```
+
+한 프로젝트에만, 또는 두 에이전트 모두에 설치하고 싶으면 설치 메시지를 그렇게 고쳐서 보낸다.
+완전한 설치는 `SKILL.md`, `PROTOCOL.md`, `examples/teampoint-laser-pointer.md` 세 파일이 든 폴더
+하나이고, 에이전트가 따르는 절차는 [INSTALL.md](INSTALL.md)에 있다.
 
 ## 사용 예
 

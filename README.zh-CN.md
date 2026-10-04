@@ -36,10 +36,17 @@ NeverStuck，就更新那一份，不要再多装一份。告诉我装到了哪�
 | Claude Code | `~/.claude/skills/neverstuck/`（或 `$CLAUDE_CONFIG_DIR/skills/neverstuck/`） | `/neverstuck "问题"` |
 | Codex | `~/.agents/skills/neverstuck/` | `$neverstuck` 或 `/skills` |
 
-**更新：** 再发一次同样的消息。**卸载：** 发送"请按 INSTALL.md 的说明，从这个智能体上移除 NeverStuck
-（https://github.com/chldbwnstm/NeverStuck）。"只想装在一个项目里，或者两个智能体都装？把消息改成
-那样再发。完整安装是一个包含 `SKILL.md`、`PROTOCOL.md` 和 `examples/teampoint-laser-pointer.md`
-三个文件的文件夹；智能体遵循的步骤见 [INSTALL.md](INSTALL.md)。
+**更新：** 再发一次同样的消息。**卸载：** 改为发送：
+
+```text
+请把 NeverStuck 从我现在使用的智能体上移除。下载
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md，
+完整阅读（不要只看摘要），并按其中 "Updating and uninstalling" 一节操作。
+```
+
+只想装在一个项目里，或者两个智能体都装？把安装消息改成那样再发。完整安装是一个包含 `SKILL.md`、
+`PROTOCOL.md` 和 `examples/teampoint-laser-pointer.md` 三个文件的文件夹；智能体遵循的步骤见
+[INSTALL.md](INSTALL.md)。
 
 ## 使用示例
 

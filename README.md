@@ -39,11 +39,17 @@ when your app asks. If NeverStuck does not show up right away, start a new sessi
 | Claude Code | `~/.claude/skills/neverstuck/` (or `$CLAUDE_CONFIG_DIR/skills/neverstuck/`) | `/neverstuck "problem"` |
 | Codex | `~/.agents/skills/neverstuck/` | `$neverstuck` or `/skills` |
 
-**Update:** send the same message again. **Remove:** send "Uninstall NeverStuck
-(https://github.com/chldbwnstm/NeverStuck) from this agent as its INSTALL.md describes." Want it
-in one project only, or for both agents? Edit the message to say so. A complete install is one
-folder with three files — `SKILL.md`, `PROTOCOL.md` and `examples/teampoint-laser-pointer.md`;
-[INSTALL.md](INSTALL.md) is what the agent follows.
+**Update:** send the same message again. **Remove:** send this instead:
+
+```text
+Uninstall NeverStuck from the agent I am using right now. Download
+https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md,
+read the whole file (not a summary) and follow its "Updating and uninstalling" section.
+```
+
+Want it in one project only, or for both agents? Edit the install message to say so. A complete
+install is one folder with three files — `SKILL.md`, `PROTOCOL.md` and
+`examples/teampoint-laser-pointer.md`; [INSTALL.md](INSTALL.md) is what the agent follows.
 
 ## Usage
 

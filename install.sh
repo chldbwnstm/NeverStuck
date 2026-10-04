@@ -61,7 +61,12 @@ else
     all|codex) install_to "$HOME/.agents/skills/neverstuck" ;;
   esac
   echo ""
-  echo "Done. Claude Code: /neverstuck   |   Codex: \$neverstuck (or /skills)"
-  echo "Claude Code picks it up in this session (run /reload-skills if the skills folder was just"
-  echo "created); Codex detects it automatically. If it does not appear, start a new session."
+  echo "Done."
+  case "$TARGET" in
+    all|claude) echo "Claude Code: invoke with /neverstuck; it is picked up in this session (run /reload-skills if the skills folder was just created)." ;;
+  esac
+  case "$TARGET" in
+    all|codex) echo "Codex: invoke with \$neverstuck or pick it in /skills; Codex detects it automatically." ;;
+  esac
+  echo "If it does not appear, start a new session or restart the app."
 fi
