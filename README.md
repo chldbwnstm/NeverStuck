@@ -5,6 +5,10 @@
 A skill for when your agent has failed the same problem ten-plus times — it makes the
 eleventh attempt different. Root-cause diagnosis, not vibe tuning.
 
+https://github.com/user-attachments/assets/7dbfb54d-d1bd-4e96-ba4e-b9d224f9b60d
+
+[한국어 소개 영상](README.ko.md)
+
 If you've ever typed "just tweak the value again" on repeat, this skill is for you. That loop
 doesn't happen because the model is dumb. It happens because the prompt asks it to **fix the
 symptom**. NeverStuck detects the stuck state and turns your next prompt into a demand to

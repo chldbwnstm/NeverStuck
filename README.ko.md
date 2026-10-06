@@ -5,6 +5,10 @@
 에이전트가 같은 문제에서 열 번 넘게 실패할 때, 열한 번째 시도를 다르게 만들어주는 스킬 —
 바이브 튜닝이 아니라 근본 원인 진단.
 
+https://github.com/user-attachments/assets/025ec4f2-b782-45ae-bae1-8e3158c80fc4
+
+[English introduction video](README.md)
+
 "값 좀 다시 맞춰줘"를 반복해 본 적 있다면 이 스킬은 당신 것이다. 그 루프는 모델이 멍청해서
 생기는 게 아니다. 프롬프트가 **증상을 고치라고** 시키기 때문에 생긴다. NeverStuck은 stuck을
 감지하고, 다음 프롬프트를 **메커니즘을 설명하라**는 요구로 바꾼다.
