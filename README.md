@@ -2,16 +2,17 @@
 
 # NeverStuck
 
-A skill for when your agent has failed the same problem ten-plus times — it makes the
-eleventh attempt different. Root-cause diagnosis, not vibe tuning.
+A skill for when your agent has failed the same problem ten-plus times. It makes the
+eleventh attempt different by demanding root-cause diagnosis instead of more vibe tuning.
 
 https://github.com/user-attachments/assets/7dbfb54d-d1bd-4e96-ba4e-b9d224f9b60d
 
 [한국어 소개 영상](README.ko.md)
 
-If you've ever typed "just tweak the value again" on repeat, this skill is for you. That loop
-doesn't happen because the model is dumb. It happens because the prompt asks it to **fix the
-symptom**. NeverStuck detects the stuck state and turns your next prompt into a demand to
+If you've ever typed "just tweak the value again" on repeat, you've seen the loop this skill
+addresses. The prompt asks the model to **fix the symptom**, which keeps the loop going;
+it doesn't mean the model is dumb. NeverStuck detects the stuck state and turns your next
+prompt into a demand to
 **explain the mechanism**.
 
 > A parameter that needs re-tuning per context is not a constant —
@@ -51,7 +52,7 @@ https://raw.githubusercontent.com/chldbwnstm/NeverStuck/master/INSTALL.md,
 read the whole file (not a summary) and follow its "Updating and uninstalling" section.
 ```
 
-Want it in one project only, or for both agents? Edit the install message to say so. A complete
+For installation in one project only, or for both agents, edit the install message to say so. A complete
 install is one folder with three files — `SKILL.md`, `PROTOCOL.md` and
 `examples/teampoint-laser-pointer.md`; [INSTALL.md](INSTALL.md) is what the agent follows.
 
@@ -96,9 +97,9 @@ timeout goes back to 5 s.
 True story: mapping a third-party SDK's normalized coordinates to pixels, the X axis drifted
 15–60px differently every session. For 10+ sessions the developer fed error logs to an agent
 and had it tune X_SCALE: 0.85 → 0.90 → 0.95. Every value fit that session and broke in the
-next. The real answer was **2/3** = 500/750 — not a better guess but a constant *derived* from
-the SDK's fixed 750×500 internal canvas, which no amount of tuning around 0.9 could land on.
-Geometry, not a value. ([The worked example](examples/teampoint-laser-pointer.md) reconstructs
+next. The answer was **2/3** = 500/750, a constant *derived* from
+the SDK's fixed 750×500 internal canvas. Tuning around 0.9 could never reach it;
+the value had to come from the geometry. ([The worked example](examples/teampoint-laser-pointer.md) reconstructs
 the case with an idealized model.)
 
 **The Fix.** After the same knob has been adjusted 3 times and failed, NeverStuck **bans** the
@@ -118,20 +119,21 @@ From a small blind experiment (Opus 5 / Sonnet 5, 2026-08; one run per arm, synt
 > — NeverStuck experiment notes (8 arms, one run each, Opus 5 / Sonnet 5)
 
 **The Fix.** NeverStuck tags every stopgap value in an answer as `[loop-bait]` and binds it to
-the experiment that would obsolete it. It never stops you from grabbing the number — it just
-makes sure you grab it **with your eyes open**.
+the experiment that would obsolete it. You can still use the number, with its temporary
+status and the experiment attached.
 
 ### #3: Why more data doesn't help
 
-A paradoxical observation from the same experiment (one run per arm — a hint, not a law):
+An observation from the same experiment (one run per arm — a hint, not a law):
 
 > Sonnet 5 fell into the trap when given rich raw data (fit a constant, stopped thinking) and
 > escaped when given no data at all. Numbers hand the model something to *solve*; a verbally
 > described symptom shape hands it something to *explain*.
 
-**The Fix.** NeverStuck's interview forces not data collection but **verbalizing the
-signature**: what is wrong, what is *conspicuously fine*, what the failure varies with, and
-what it does not vary with. Those four sentences rule out most of the hypothesis space.
+**The Fix.** NeverStuck's interview requires **verbalizing the
+signature** rather than just collecting data: what is wrong, what is *conspicuously fine*,
+what the failure varies with, and what it does not vary with. Those four sentences rule out
+most of the hypothesis space.
 
 ## Skills
 
@@ -152,7 +154,7 @@ what it does not vary with. Those four sentences rule out most of the hypothesis
 3. **Unstuck Report** — A diagnosis / B 2–3 root-cause hypotheses (models, not values) /
    C rewritten prompts (no new value for the same knob, ever) / D **exactly one experiment**
    (verdict rules per hypothesis declared up front).
-4. **Honest escalation if 2 rounds don't crack it** — instrument → read the third-party source
+4. **Escalation if 2 rounds don't crack it** — instrument → read the third-party source
    (grep strings provided) → controlled probing → ask a human (question draft provided).
    Admitting that "prompting cannot recover a fact that exists only inside a black box" is
    part of the protocol.
